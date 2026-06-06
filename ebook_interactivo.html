@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ebook Interactivo - AgroCredito Colombia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #070b12; --surface: #111827; --surface2: #1f2937; --primary: #10b981; --primary-hover: #34d399; --primary-rgb: 16,185,129; --text: #f3f4f6; --text-muted: #9ca3af; --accent: #3b82f6; --warning: #f59e0b; --radius: 16px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        .ebook-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        .ebook-header { text-align: center; padding: 60px 20px; background: radial-gradient(circle, rgba(var(--primary-rgb),0.15) 0%, transparent 70%); border-radius: var(--radius); margin-bottom: 30px; }
+        .ebook-header h1 { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
+        .ebook-header p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+        .ebook-header .team { margin-top: 20px; color: var(--accent); font-weight: 600; }
+
+        .voice-controls { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); padding: 20px; margin-bottom: 30px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; position: sticky; top: 10px; z-index: 100; }
+        .voice-btn { background: var(--primary); color: var(--bg); border: none; padding: 12px 24px; border-radius: 30px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .voice-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .voice-btn.stop { background: #ef4444; }
+        .voice-btn.pause { background: var(--warning); }
+        .speed-control { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+        .speed-control select { background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; }
+        .progress-bar { width: 100%; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+
+        .chapter { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); padding: 32px; margin-bottom: 24px; transition: all 0.3s; }
+        .chapter:hover { border-color: rgba(var(--primary-rgb),0.3); }
+        .chapter.active { border-color: var(--primary); box-shadow: 0 0 30px rgba(var(--primary-rgb),0.1); }
+        .chapter-number { font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px; }
+        .chapter h2 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+        .chapter p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; font-size: 1.05rem; }
+        .chapter ul { list-style: none; margin-bottom: 16px; }
+        .chapter li { color: var(--text-muted); padding: 6px 0; padding-left: 24px; position: relative; }
+        .chapter li::before { content: '✓'; color: var(--primary); position: absolute; left: 0; font-weight: 700; }
+        .chapter .highlight { background: rgba(var(--primary-rgb),0.1); border-left: 4px solid var(--primary); padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+        .chapter .highlight p { margin-bottom: 0; color: var(--text); }
+
+        .chapter-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(var(--primary-rgb),0.1); color: var(--primary); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; margin-bottom: 16px; }
+
+        .toc { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius); padding: 24px; margin-bottom: 30px; }
+        .toc h3 { font-family: 'Outfit', sans-serif; color: var(--primary); margin-bottom: 16px; }
+        .toc-list { list-style: none; }
+        .toc-list li { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
+        .toc-list li:hover { color: var(--primary); padding-left: 10px; }
+        .toc-list li:last-child { border-bottom: none; }
+        .toc-num { color: var(--accent); font-weight: 700; font-size: 0.9rem; }
+
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
+        .nav-btn { background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 30px; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .nav-btn:hover { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+
+        .footer-ebook { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
+
+        @media (max-width: 600px) {
+            .ebook-header h1 { font-size: 1.8rem; }
+            .chapter h2 { font-size: 1.4rem; }
+            .voice-controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ebook-container">
+
+    <div class="ebook-header">
+        <h1>🌾 AgroCredito Colombia</h1>
+        <p>Ebook Interactivo con Voz - Guia Paso a Paso del Proyecto de Seguridad Alimentaria y Creditos Rurales Inteligentes</p>
+        <div class="team">Equipo: Andres, Sebastian, Julian, Yuri - Talento Tech 2</div>
+    </div>
+
+    <div class="voice-controls">
+        <button class="voice-btn" id="btnPlay" onclick="playCurrentChapter()">
+            <i class="fa-solid fa-play"></i> Leer Capitulo
+        </button>
+        <button class="voice-btn pause" id="btnPause" onclick="pauseVoice()">
+            <i class="fa-solid fa-pause"></i> Pausar
+        </button>
+        <button class="voice-btn stop" id="btnStop" onclick="stopVoice()">
+            <i class="fa-solid fa-stop"></i> Detener
+        </button>
+        <div class="speed-control">
+            <label>Velocidad:</label>
+            <select id="speedSelect" onchange="changeSpeed()">
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+            </select>
+        </div>
+        <div class="speed-control">
+            <label>Voz:</label>
+            <select id="voiceSelect"></select>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="toc">
+        <h3><i class="fa-solid fa-list"></i> Tabla de Contenidos</h3>
+        <ul class="toc-list">
+            <li onclick="goToChapter(0)"><span class="toc-num">01</span> Introduccion y Problema</li>
+            <li onclick="goToChapter(1)"><span class="toc-num">02</span> Nuestra Solucion</li>
+            <li onclick="goToChapter(2)"><span class="toc-num">03</span> Sectores Productivos</li>
+            <li onclick="goToChapter(3)"><span class="toc-num">04</span> Tecnologia Rural</li>
+            <li onclick="goToChapter(4)"><span class="toc-num">05</span> Modelo de Inteligencia Artificial</li>
+            <li onclick="goToChapter(5)"><span class="toc-num">06</span> Consulta por Cedula</li>
+            <li onclick="goToChapter(6)"><span class="toc-num">07</span> Seguridad Alimentaria</li>
+            <li onclick="goToChapter(7)"><span class="toc-num">08</span> Como Usar la Plataforma</li>
+        </ul>
+    </div>
+
+    <div id="chapters">
+
+        <div class="chapter" data-chapter="0">
+            <div class="chapter-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="chapter-number">Capitulo 1</div>
+            <h2>El Problema: Colombia Abandona el Campo</h2>
+            <p>Colombia tiene una crisis silenciosa: los jovenes abandonan el campo por falta de oportunidades. Los creditos agricolas son caros e inaccesibles, y la produccion de alimentos no alcanza para alimentar a nuestras familias.</p>
+            <div class="highlight">
+                <p><strong>Dato alarmante:</strong> El 70% de los jovenes colombianos prefieren vivir en la ciudad, dejando el campo sin manos年轻 para cultivar.</p>
+            </div>
+            <ul>
+                <li>Tasas de interes prohibitivas para pequenos agricultores</li>
+                <li>Falta de tecnologia moderna en el campo</li>
+                <li>Jovenes sin incentivos para volver a cultivar</li>
+                <li>Importacion excesiva de alimentos</li>
+                <li>Seguridad alimentaria en riesgo</li>
+            </ul>
+            <p>Este proyecto nace para cambiar esa realidad, usando la inteligencia artificial para conectar a los agricultores con creditos justos y promover el amor por la tierra.</p>
+        </div>
+
+        <div class="chapter" data-chapter="1">
+            <div class="chapter-icon"><i class="fa-solid fa-lightbulb"></i></div>
+            <div class="chapter-number">Capitulo 2</div>
+            <h2>Nuestra Solucion: Creditos Inteligentes con IA</h2>
+            <p>AgroCredito Colombia es una plataforma que usa inteligencia artificial para predecir tasas de credito justas, conecta agricultores con subsidios gubernamentales, y promueve la tecnologia rural.</p>
+            <ul>
+                <li>Consulta de credito con solo tu cedula en segundos</li>
+                <li>Modelo de IA con 89.2% de precision</li>
+                <li>7 sectores productivos cubiertos</li>
+                <li>Tecnologia solar, riego y drones</li>
+                <li>Graficos interactivos y dashboard</li>
+            </ul>
+            <div class="highlight">
+                <p><strong>Objetivo:</strong> Volver al campo, cultivar nuestro futuro, y llevar alimentos frescos a la mesa de cada familia colombiana y del mundo.</p>
+            </div>
+        </div>
+
+        <div class="chapter" data-chapter="2">
+            <div class="chapter-icon"><i class="fa-solid fa-seedling"></i></div>
+            <div class="chapter-number">Capitulo 3</div>
+            <h2>Sectores Productivos que Financiamos</h2>
+            <p>Nuestra plataforma cubre los 7 pilares de la seguridad alimentaria colombiana:</p>
+            <ul>
+                <li><strong>Agricultura:</strong> Cafe, cacao, arroz, maiz, frutas, hortalizas, platano, yuca, papa</li>
+                <li><strong>Ganaderia:</strong> Produccion lechera, carne bovina, ovina, caprina y cuero</li>
+                <li><strong>Piscicultura:</strong> Tilapia, trucha, camaron y peces de agua dulce</li>
+                <li><strong>Porcicola:</strong> Cerdo encaste, mestizo, lechon y chancho gordo</li>
+                <li><strong>Avicultura:</strong> Pollo parrillero, huevo, pavo y codorniz</li>
+                <li><strong>Energia Solar:</strong> Placas fotovoltaicas, bombas solares, secadores</li>
+                <li><strong>Tecnologia Agricola:</strong> Riego, drones, sensores IoT, automatizacion</li>
+            </ul>
+            <p>Cada sector tiene sus propias caracteristicas y el modelo de IA las tiene en cuenta para calcular la tasa de interes mas justa para cada agricultor.</p>
+        </div>
+
+        <div class="chapter" data-chapter="3">
+            <div class="chapter-icon"><i class="fa-solid fa-microchip"></i></div>
+            <div class="chapter-number">Capitulo 4</div>
+            <h2>Tecnologia Rural para Producir Mas y Mejor</h2>
+            <p>La tecnologia reduce costos y aumenta la productividad. Asi es como ayudamos a los agricultores:</p>
+            <ul>
+                <li><strong>Energia Solar:</strong> Reduce costos operativos hasta un 40%. Paneles para bombeo de agua, secado de cafe, iluminacion ganadera</li>
+                <li><strong>Riego Inteligente:</strong> Aumenta productividad hasta 3x. Ahorra 60% de agua con goteo automatizado</li>
+                <li><strong>Drones Agricolas:</strong> Monitorea cultivos desde el aire. Fumigacion de precision, mapeo NDVI</li>
+                <li><strong>Sensores IoT:</strong> Monitorea temperatura, humedad y ganado en tiempo real desde tu celular</li>
+            </ul>
+            <div class="highlight">
+                <p><strong>Impacto:</strong> Los agricultores con tecnologia pagan tasas hasta 5 puntos porcentuales mas bajas que los sin tecnologia.</p>
+            </div>
+        </div>
+
+        <div class="chapter" data-chapter="4">
+            <div class="chapter-icon"><i class="fa-solid fa-brain"></i></div>
+            <div class="chapter-number">Capitulo 5</div>
+            <h2>El Modelo de Inteligencia Artificial</h2>
+            <p>Usamos Regresion Lineal Multiple para predecir la tasa de interes mas justa para cada agricultor.</p>
+            <ul>
+                <li><strong>R2 del modelo:</strong> 89.2% de precision</li>
+                <li><strong>Error promedio:</strong> Solo 0.75 puntos porcentuales</li>
+                <li><strong>Variables predictoras:</strong> 11 factores (edad, experiencia, hectareas, ingresos, monto, plazo, garantia, subsidio, tecnologias, energia solar, riego)</li>
+            </ul>
+            <div class="highlight">
+                <p><strong>Como reduce tasas:</strong><br>
+                - Subsidio LEC Finagro: reduce 4.34% la tasa<br>
+                - Garantia FAG: reduce 2.36% la tasa<br>
+                - Energia Solar: reduce 0.69% la tasa<br>
+                - Cada tecnologia adicional: reduce 0.35%</p>
+            </div>
+            <p>El modelo esta entrenado con 2,000 registros de creditos rurales colombianos y se serializa en un archivo .pkl para uso en produccion.</p>
+        </div>
+
+        <div class="chapter" data-chapter="5">
+            <div class="chapter-icon"><i class="fa-solid fa-id-card"></i></div>
+            <div class="chapter-number">Capitulo 6</div>
+            <h2>Consulta de Credito por Cedula</h2>
+            <p>El usuario puede consultar su credito de dos formas:</p>
+            <ul>
+                <li><strong>Busqueda por cedula:</strong> Ingresa su cedula y el sistema busca si tiene credito pre-aprobado</li>
+                <li><strong>Formulario manual:</strong> Si no encuentra datos, llena su perfil manualmente</li>
+                <li><strong>Simulador:</strong> Calcula cuotas con tabla de amortizacion mes a mes</li>
+                <li><strong>Contribucion de variables:</strong> Muestra como cada factor afecta su tasa</li>
+            </ul>
+            <p>El sistema es hibrido: primero busca en la base de datos, y si no encuentra, permite completar el formulario. Esto garantiza que todos puedan acceder a una simulacion de credito.</p>
+        </div>
+
+        <div class="chapter" data-chapter="6">
+            <div class="chapter-icon"><i class="fa-solid fa-wheat-awn"></i></div>
+            <div class="chapter-number">Capitulo 7</div>
+            <h2>Impacto en la Seguridad Alimentaria</h2>
+            <p>Cada credito aprobado transforma vidas y alimenta familias:</p>
+            <ul>
+                <li><strong>2,000+</strong> agricultores registrados</li>
+                <li><strong>15,000+ toneladas</strong> de alimentos producidos por ano</li>
+                <li><strong>29 departamentos</strong> cubiertos</li>
+                <li><strong>Miles de familias</strong> alimentadas con productos colombianos</li>
+            </ul>
+            <div class="highlight">
+                <p><strong>Mesa colombiana:</strong> Cafe, arroz, platano, frutas, hortalizas, leche, carne, pollo, huevo, pescado - todo producido por agricultores colombianos con creditos justos.</p>
+            </div>
+            <p>Nuestro objetivo es que Colombia deje de importar alimentos y se convierta en exportador, creando empleo digno en el campo.</p>
+        </div>
+
+        <div class="chapter" data-chapter="7">
+            <div class="chapter-icon"><i class="fa-solid fa-rocket"></i></div>
+            <div class="chapter-number">Capitulo 8</div>
+            <h2>Como Usar la Plataforma</h2>
+            <p>Paso a paso para usar AgroCredito Colombia:</p>
+            <ul>
+                <li><strong>Paso 1:</strong> Abre la app en http://localhost:8520 o ejecuta INICIAR_PROYECTO.bat</li>
+                <li><strong>Paso 2:</strong> Ve a la pestana "Consulta por Cedula"</li>
+                <li><strong>Paso 3:</strong> Ingresa tu cedula o completa el formulario</li>
+                <li><strong>Paso 4:</strong> Revisa tu tasa estimada y tabla de amortizacion</li>
+                <li><strong>Paso 5:</strong> Explora los sectores y tecnologia rural</li>
+            </ul>
+            <div class="highlight">
+                <p><strong>Para GitHub Pages:</strong> Sube la carpeta GitHub_Pages_AgroCredito a tu repositorio y activa Pages en Settings.</p>
+            </div>
+            <p><strong>Volvamos al campo. Cultivemos nuestro futuro. Alimentemos a Colombia.</strong></p>
+        </div>
+
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" onclick="prevChapter()"><i class="fa-solid fa-arrow-left"></i> Anterior</button>
+        <button class="nav-btn" onclick="nextChapter()">Siguiente <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+
+    <div class="footer-ebook">
+        <p>AgroCredito Colombia - Ebook Interactivo con Voz</p>
+        <p>Equipo: Andres, Sebastian, Julian, Yuri - Talento Tech 2</p>
+        <p>Licencia MIT</p>
+    </div>
+
+</div>
+
+<script>
+    let currentChapter = 0;
+    const chapters = document.querySelectorAll('.chapter');
+    let synth = window.speechSynthesis;
+    let utterance = null;
+    let isSpeaking = false;
+    let voices = [];
+
+    function loadVoices() {
+        voices = synth.getVoices();
+        const select = document.getElementById('voiceSelect');
+        select.innerHTML = '';
+        const spanishVoices = voices.filter(v => v.lang.startsWith('es'));
+        const allVoices = spanishVoices.length > 0 ? spanishVoices : voices;
+        allVoices.forEach((v, i) => {
+            const opt = document.createElement('option');
+            opt.value = voices.indexOf(v);
+            opt.textContent = `${v.name} (${v.lang})`;
+            select.appendChild(opt);
+        });
+    }
+
+    synth.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function getChapterText(index) {
+        const chapter = chapters[index];
+        const elements = chapter.querySelectorAll('h2, p, li, .highlight p');
+        let text = '';
+        elements.forEach(el => {
+            text += el.textContent + '. ';
+        });
+        return text;
+    }
+
+    function playCurrentChapter() {
+        stopVoice();
+        const text = getChapterText(currentChapter);
+        utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-CO';
+        utterance.rate = parseFloat(document.getElementById('speedSelect').value);
+        const voiceIndex = document.getElementById('voiceSelect').value;
+        if (voices[voiceIndex]) {
+            utterance.voice = voices[voiceIndex];
+        }
+        utterance.onend = () => {
+            isSpeaking = false;
+            document.getElementById('progressFill').style.width = '100%';
+        };
+        utterance.onboundary = (event) => {
+            const progress = (event.charIndex / text.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        };
+        synth.speak(utterance);
+        isSpeaking = true;
+        highlightChapter(currentChapter);
+    }
+
+    function pauseVoice() {
+        if (synth.speaking) {
+            synth.pause();
+        } else if (synth.paused) {
+            synth.resume();
+        }
+    }
+
+    function stopVoice() {
+        synth.cancel();
+        isSpeaking = false;
+        document.getElementById('progressFill').style.width = '0%';
+    }
+
+    function changeSpeed() {
+        if (isSpeaking) {
+            playCurrentChapter();
+        }
+    }
+
+    function highlightChapter(index) {
+        chapters.forEach((ch, i) => {
+            ch.classList.toggle('active', i === index);
+        });
+    }
+
+    function goToChapter(index) {
+        stopVoice();
+        currentChapter = index;
+        chapters[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightChapter(index);
+    }
+
+    function nextChapter() {
+        if (currentChapter < chapters.length - 1) {
+            goToChapter(currentChapter + 1);
+        }
+    }
+
+    function prevChapter() {
+        if (currentChapter > 0) {
+            goToChapter(currentChapter - 1);
+        }
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const index = Array.from(chapters).indexOf(entry.target);
+                if (index !== -1) {
+                    currentChapter = index;
+                    highlightChapter(index);
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+
+    chapters.forEach(ch => observer.observe(ch));
+
+    highlightChapter(0);
+</script>
+
+</body>
+</html>

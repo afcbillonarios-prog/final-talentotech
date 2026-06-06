@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Granja Colombia - Juego de Animales</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #1a2e1a; --surface: #2d4a2d; --surface2: #3d5c3d; --primary: #4ade80; --primary-dark: #22c55e; --gold: #fbbf24; --danger: #ef4444; --text: #f0fdf4; --text-muted: #a3e635; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: linear-gradient(180deg, #1a2e1a 0%, #0f1f0f 100%); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+        .game-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .start-screen { text-align: center; padding: 60px 20px; }
+        .farm-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .cloud { position: absolute; background: rgba(255,255,255,0.1); border-radius: 50px; animation: float 20s infinite linear; }
+        @keyframes float { from { transform: translateX(-200px); } to { transform: translateX(calc(100vw + 200px)); } }
+
+        .game-title { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 900; color: var(--primary); margin-bottom: 10px; text-shadow: 0 4px 20px rgba(74,222,128,0.3); }
+        .game-subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; }
+
+        .animal-parade { font-size: 4rem; margin: 30px 0; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        .start-btn { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #1a2e1a; border: none; padding: 18px 48px; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 40px rgba(74,222,128,0.3); }
+        .start-btn:hover { transform: translateY(-3px) scale(1.05); }
+
+        .mode-select { display: flex; gap: 16px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
+        .mode-card { background: var(--surface); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.3s; width: 180px; text-align: center; }
+        .mode-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .mode-card.selected { border-color: var(--primary); background: rgba(74,222,128,0.1); }
+        .mode-icon { font-size: 3rem; margin-bottom: 10px; }
+        .mode-name { font-weight: 700; font-size: 1rem; margin-bottom: 5px; }
+        .mode-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+        .hud { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-radius: 16px; padding: 16px 24px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .hud-item { text-align: center; }
+        .hud-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+        .hud-value { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+
+        .animal-display { background: var(--surface); border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .animal-emoji { font-size: 8rem; animation: animalBounce 1s infinite; cursor: pointer; transition: transform 0.2s; user-select: none; }
+        .animal-emoji:hover { transform: scale(1.1); }
+        .animal-emoji:active { transform: scale(0.95); }
+        @keyframes animalBounce { 0%,100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-10px) rotate(-3deg); } 75% { transform: translateY(-10px) rotate(3deg); } }
+
+        .animal-sound { font-size: 2rem; position: absolute; top: 20px; right: 20px; animation: soundPulse 1s infinite; }
+        @keyframes soundPulse { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        .question-box { background: var(--surface2); border-radius: 16px; padding: 24px; margin-bottom: 20px; text-align: center; }
+        .question-text { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 600; }
+
+        .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .option-btn { background: var(--surface); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; cursor: pointer; transition: all 0.3s; text-align: center; font-size: 1.1rem; }
+        .option-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .option-btn.correct { border-color: var(--primary); background: rgba(74,222,128,0.2); animation: correctPop 0.5s; }
+        .option-btn.wrong { border-color: var(--danger); background: rgba(239,68,68,0.2); animation: wrongShake 0.5s; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.4; }
+        @keyframes correctPop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes wrongShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .feedback { text-align: center; padding: 20px; border-radius: 16px; margin-bottom: 20px; display: none; }
+        .feedback.show { display: block; animation: fadeIn 0.3s; }
+        .feedback.correct { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.3); }
+        .feedback.wrong { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
+        .feedback-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .feedback-text { font-size: 1.2rem; font-weight: 700; }
+        .feedback-fact { color: var(--text-muted); font-size: 0.95rem; margin-top: 10px; }
+
+        .next-btn { background: var(--primary); color: #1a2e1a; border: none; padding: 14px 36px; border-radius: 30px; font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: none; }
+        .next-btn.show { display: inline-block; }
+        .next-btn:hover { transform: translateY(-2px); }
+
+        .barn { position: relative; height: 150px; background: linear-gradient(180deg, transparent 0%, rgba(139,69,19,0.3) 100%); border-radius: 20px; margin-top: 30px; overflow: hidden; }
+        .fence { position: absolute; bottom: 0; width: 100%; height: 40px; background: repeating-linear-gradient(90deg, #8b4513 0px, #8b4513 20px, transparent 20px, transparent 40px); }
+        .fence-rail { position: absolute; bottom: 15px; width: 100%; height: 8px; background: #8b4513; }
+        .animal-pen { position: absolute; bottom: 50px; font-size: 2.5rem; transition: all 0.3s; cursor: pointer; }
+        .animal-pen:hover { transform: scale(1.2); }
+
+        .collected-animals { background: var(--surface); border-radius: 16px; padding: 20px; margin-top: 20px; }
+        .collected-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; }
+        .collected-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .collected-item { background: var(--surface2); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .collected-item .emoji { font-size: 1.5rem; }
+
+        .result-screen { text-align: center; padding: 60px 20px; }
+        .result-trophy { font-size: 6rem; animation: trophyBounce 1s ease; }
+        @keyframes trophyBounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .result-title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--gold); margin: 20px 0; }
+        .result-score { font-family: 'Outfit', sans-serif; font-size: 4rem; font-weight: 900; color: var(--primary); }
+        .result-animals { font-size: 3rem; margin: 20px 0; }
+        .result-message { color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 20px auto; }
+        .play-btn { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #1a2e1a; border: none; padding: 16px 40px; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; cursor: pointer; margin-top: 20px; transition: all 0.3s; }
+        .play-btn:hover { transform: translateY(-3px); }
+
+        .hearts { position: fixed; pointer-events: none; z-index: 1000; }
+        .heart { position: absolute; font-size: 1.5rem; animation: heartFloat 1s ease forwards; }
+        @keyframes heartFloat { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
+
+        @media (max-width: 600px) {
+            .game-title { font-size: 2.2rem; }
+            .animal-emoji { font-size: 5rem; }
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="farm-bg">
+    <div class="cloud" style="width:100px; height:40px; top:10%; animation-duration:25s;"></div>
+    <div class="cloud" style="width:150px; height:50px; top:20%; animation-duration:30s; animation-delay:5s;"></div>
+    <div class="cloud" style="width:80px; height:35px; top:15%; animation-duration:22s; animation-delay:10s;"></div>
+</div>
+
+<div class="hearts" id="hearts"></div>
+
+<div class="game-container">
+
+    <div class="screen active" id="startScreen">
+        <div class="start-screen">
+            <div class="game-title">🐄 Granja Colombia 🐔</div>
+            <div class="game-subtitle">Juego de Animales del Campo Colombiano</div>
+            <div class="animal-parade">🐄 🐔 🐷 🐟 🐴 🐐 🐑 🦆</div>
+
+            <p style="color:var(--text-muted); max-width:500px; margin:0 auto 30px;">Adivina el animal, aprende sobre la ganaderia colombiana y colecciona animales para tu granja virtual.</p>
+
+            <div class="mode-select">
+                <div class="mode-card selected" onclick="selectMode('normal')">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-name">Normal</div>
+                    <div class="mode-desc">10 preguntas</div>
+                </div>
+                <div class="mode-card" onclick="selectMode('endless')">
+                    <div class="mode-icon">♾️</div>
+                    <div class="mode-name">Infinito</div>
+                    <div class="mode-desc">Sin limite</div>
+                </div>
+                <div class="mode-card" onclick="selectMode('survival')">
+                    <div class="mode-icon">💀</div>
+                    <div class="mode-name">Supervivencia</div>
+                    <div class="mode-desc">3 vidas</div>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">
+                <i class="fa-solid fa-play"></i> ¡A Jugar!
+            </button>
+        </div>
+    </div>
+
+    <div class="screen" id="gameScreen">
+        <div class="hud">
+            <div class="hud-item">
+                <div class="hud-label">Puntos</div>
+                <div class="hud-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Pregunta</div>
+                <div class="hud-value" id="questionNum">1/10</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Racha</div>
+                <div class="hud-value" id="streakDisplay">0🔥</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Vidas</div>
+                <div class="hud-value" id="livesDisplay">❤️❤️❤️</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Animales</div>
+                <div class="hud-value" id="animalsDisplay">0🐾</div>
+            </div>
+        </div>
+
+        <div class="animal-display">
+            <div class="animal-sound" id="animalSound">🔊</div>
+            <div class="animal-emoji" id="animalEmoji" onclick="makeSound()">🐄</div>
+        </div>
+
+        <div class="question-box">
+            <div class="question-text" id="questionText">¿Que animal es este?</div>
+        </div>
+
+        <div class="options-grid" id="optionsGrid"></div>
+
+        <div class="feedback" id="feedback">
+            <div class="feedback-icon" id="feedbackIcon"></div>
+            <div class="feedback-text" id="feedbackText"></div>
+            <div class="feedback-fact" id="feedbackFact"></div>
+        </div>
+
+        <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+            Siguiente <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <div class="barn">
+            <div class="fence-rail"></div>
+            <div class="fence"></div>
+            <div id="animalPen"></div>
+        </div>
+
+        <div class="collected-animals" id="collectedSection" style="display:none;">
+            <div class="collected-title">🏠 Mi Granja</div>
+            <div class="collected-grid" id="collectedGrid"></div>
+        </div>
+    </div>
+
+    <div class="screen" id="resultScreen">
+        <div class="result-screen">
+            <div class="result-trophy" id="resultTrophy">🏆</div>
+            <div class="result-title" id="resultTitle">¡Granjero Experto!</div>
+            <div class="result-score" id="resultScore">0</div>
+            <div class="result-animals" id="resultAnimals"></div>
+            <div class="result-message" id="resultMessage"></div>
+            <div class="collected-animals" id="finalCollection"></div>
+            <button class="play-btn" onclick="restartGame()">
+                <i class="fa-solid fa-rotate-right"></i> Jugar de Nuevo
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const animals = [
+        { emoji: "🐄", name: "Vaca", type: "Ganaderia", fact: "Colombia tiene mas de 28 millones de bovinos, siendo uno de los principales paises ganaderos de America Latina.", sound: "Moo" },
+        { emoji: "🐔", name: "Gallina", type: "Avicultura", fact: "La avicultura colombiana produce mas de 2 mil millones de huevos al ano, abasteciendo todo el pais.", sound: "Cluck" },
+        { emoji: "🐷", name: "Cerdo", type: "Porcicola", fact: "La produccion porcina colombiana genera miles de empleos rurales y alimenta a millones de familias.", sound: "Oink" },
+        { emoji: "🐟", name: "Pez", type: "Piscicultura", fact: "La tilapia y la trucha son los principales peces de cultivo en Colombia, con produccion en 25 departamentos.", sound: "Glub" },
+        { emoji: "🐴", name: "Caballo", type: "Ganaderia", fact: "Los caballos son esenciales en muchas regiones de Colombia para el transporte y el trabajo agricola.", sound: "Neigh" },
+        { emoji: "🐐", name: "Cabra", type: "Ganaderia", fact: "La cabra caprina produce leche y carne, siendo importante en zonas aridas del pais.", sound: "Baa" },
+        { emoji: "🐑", name: "Oveja", type: "Ganaderia", fact: "La ganaderia ovina produce lana, carne y leche, con razas adaptadas a diferentes climas.", sound: "Baa" },
+        { emoji: "🦆", name: "Pato", type: "Avicultura", fact: "Los patos producen huevos y carne, y son importantes en sistemas de produccion integrada.", sound: "Quack" },
+        { emoji: "🐂", name: "Toro", type: "Ganaderia", fact: "Los toros son utilizados para mejorar la genetica del hato ganadero en Colombia.", sound: "Moo" },
+        { emoji: "🐃", name: "Búfalo", type: "Ganaderia", fact: "Los bufalos producen leche con mayor grasa, ideal para la produccion de quesos artesanales.", sound: "Moo" },
+        { emoji: "🦃", name: "Pavo", type: "Avicultura", fact: "El pavo es un ave de corral importante para la produccion de carne en temporadas festivas.", sound: "Gobble" },
+        { emoji: "🐇", name: "Conejo", type: "Porcicola", fact: "La cunicultura produce carne magra y piel, siendo una alternativa sustentable para pequenos productores.", sound: "Squeak" },
+        { emoji: "🐢", name: "Tortuga", type: "Piscicultura", fact: "Algunas especies de tortugas son criadas para la conservacion y el comercio responsable.", sound: "..." },
+        { emoji: "🐝", name: "Abeja", type: "Apicultura", fact: "La apicultura produce miel, cera y polen, siendo vital para la polinizacion de cultivos.", sound: "Buzz" },
+        { emoji: "🐴", name: "Mula", type: "Ganaderia", fact: "Las mulas son hibridos de caballo y burro, usadas carga en zonas montanosas.", sound: "Hee-haw" }
+    ];
+
+    const questions = [
+        { q: "¿Que animal produce la leche para el cafe con leche?", a: ["🐄 Vaca", "🐔 Gallina", "🐷 Cerdo", "🐟 Pez"], correct: 0 },
+        { q: "¿Que animal pone los huevos que comemos en el desayuno?", a: ["🐄 Vaca", "🐔 Gallina", "🐷 Cerdo", "🐐 Cabra"], correct: 1 },
+        { q: "¿Que animal produce la carne de cochon?", a: ["🐄 Vaca", "🐔 Gallina", "🐷 Cerdo", "🐑 Oveja"], correct: 2 },
+        { q: "¿Que animal vive en el agua y produce pescado fresco?", a: ["🐄 Vaca", "🐔 Gallina", "🐷 Cerdo", "🐟 Pez"], correct: 3 },
+        { q: "¿Que animal es el simbolo de la leche en Colombia?", a: ["🐄 Vaca", "🐔 Gallina", "🐐 Cabra", "🐃 Bufalo"], correct: 0 },
+        { q: "¿Que animal produce miel y poliniza las flores?", a: ["🐝 Abeja", "🐔 Gallina", "🐄 Vaca", "🐝 Abeja"], correct: 0 },
+        { q: "¿Que animal es usado para carga en montanas?", a: ["🐔 Gallina", "🐴 Caballo", "🐷 Cerdo", "🐟 Pez"], correct: 1 },
+        { q: "¿Que animal produce carne magra y es facil de criar?", a: ["🐄 Vaca", "🐔 Gallina", "🐇 Conejo", "🐟 Pez"], correct: 2 },
+        { q: "¿Que animal es importante para la produccion de quesos?", a: ["🐔 Gallina", "🐟 Pez", "🐃 Bufalo", "🐷 Cerdo"], correct: 2 },
+        { q: "¿Que animal produce huevos grandes para festividades?", a: ["🐔 Gallina", "🦃 Pavo", "🦆 Pato", "🐐 Cabra"], correct: 1 },
+        { q: "¿Que animal es hibrido de caballo y burro?", a: ["🐄 Vaca", "🐔 Gallina", "🐴 Mula", "🐷 Cerdo"], correct: 2 },
+        { q: "¿Que animal vive en el agua dulce colombiana?", a: ["🐄 Vaca", "🐔 Gallina", "🐷 Cerdo", "🐟 Pez"], correct: 3 },
+        { q: "¿Que animal produce lana para abrigos?", a: ["🐔 Gallina", "🐑 Oveja", "🐷 Cerdo", "🐟 Pez"], correct: 1 },
+        { q: "¿Que animal es el rey de la granja?", a: ["🐔 Gallina", "🐄 Vaca", "🐔 Galllo", "🐷 Cerdo"], correct: 2 },
+        { q: "¿Que animal pone huevos para la tortilla?", a: ["🐄 Vaca", "🐔 Gallina", "🦆 Pato", "🦃 Pavo"], correct: 1 }
+    ];
+
+    let mode = 'normal';
+    let currentQ = 0;
+    let score = 0;
+    let lives = 3;
+    let streak = 0;
+    let maxStreak = 0;
+    let collectedAnimals = [];
+    let shuffledQuestions = [];
+    let shuffledAnimals = [];
+
+    function selectMode(m) {
+        mode = m;
+        document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+    }
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function startGame() {
+        shuffledQuestions = shuffle(questions);
+        shuffledAnimals = shuffle(animals);
+        currentQ = 0;
+        score = 0;
+        lives = mode === 'survival' ? 3 : 999;
+        streak = 0;
+        maxStreak = 0;
+        collectedAnimals = [];
+        showScreen('gameScreen');
+        loadQuestion();
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function loadQuestion() {
+        const q = shuffledQuestions[currentQ % shuffledQuestions.length];
+        const animal = shuffledAnimals[currentQ % shuffledAnimals.length];
+
+        document.getElementById('animalEmoji').textContent = animal.emoji;
+        document.getElementById('animalSound').textContent = animal.sound;
+        document.getElementById('questionText').textContent = q.q;
+        document.getElementById('scoreDisplay').textContent = score;
+        document.getElementById('streakDisplay').textContent = streak + '🔥';
+        document.getElementById('livesDisplay').textContent = '❤️'.repeat(Math.min(lives, 5));
+        document.getElementById('animalsDisplay').textContent = collectedAnimals.length + '🐾';
+        document.getElementById('questionNum').textContent = mode === 'endless' ? `#${currentQ + 1}` : `${currentQ + 1}/${shuffledQuestions.length}`;
+        document.getElementById('feedback').className = 'feedback';
+        document.getElementById('nextBtn').className = 'next-btn';
+
+        const grid = document.getElementById('optionsGrid');
+        grid.innerHTML = '';
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = () => selectAnswer(i, q.correct, animal);
+            grid.appendChild(btn);
+        });
+
+        document.getElementById('animalPen').innerHTML = '';
+        collectedAnimals.slice(-5).forEach((a, i) => {
+            const el = document.createElement('div');
+            el.className = 'animal-pen';
+            el.style.left = (20 + i * 60) + 'px';
+            el.textContent = a.emoji;
+            el.title = a.name;
+            document.getElementById('animalPen').appendChild(el);
+        });
+    }
+
+    function selectAnswer(index, correct, animal) {
+        const opts = document.querySelectorAll('.option-btn');
+        opts.forEach(o => o.classList.add('disabled'));
+
+        if (index === correct) {
+            opts[index].classList.add('correct');
+            score += 100 + (streak * 20);
+            streak++;
+            if (streak > maxStreak) maxStreak = streak;
+            if (!collectedAnimals.find(a => a.name === animal.name)) {
+                collectedAnimals.push(animal);
+            }
+            showFeedback(true, animal.fact);
+            spawnHearts();
+        } else {
+            opts[index].classList.add('wrong');
+            opts[correct].classList.add('correct');
+            streak = 0;
+            if (mode === 'survival') lives--;
+            showFeedback(false, animal.fact);
+        }
+
+        document.getElementById('scoreDisplay').textContent = score;
+        document.getElementById('streakDisplay').textContent = streak + '🔥';
+        document.getElementById('livesDisplay').textContent = '❤️'.repeat(Math.min(lives, 5));
+        document.getElementById('animalsDisplay').textContent = collectedAnimals.length + '🐾';
+        document.getElementById('nextBtn').className = 'next-btn show';
+
+        updateCollection();
+
+        if (mode === 'survival' && lives <= 0) {
+            setTimeout(showResults, 1500);
+        }
+    }
+
+    function showFeedback(isCorrect, fact) {
+        const fb = document.getElementById('feedback');
+        fb.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+        document.getElementById('feedbackIcon').textContent = isCorrect ? '🎉' : '😢';
+        document.getElementById('feedbackText').textContent = isCorrect ? '¡Correcto! +100 puntos' : '¡Incorrecto!';
+        document.getElementById('feedbackFact').textContent = fact;
+    }
+
+    function spawnHearts() {
+        const container = document.getElementById('hearts');
+        for (let i = 0; i < 5; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.textContent = ['❤️', '💚', '💛', '🧡', '💜'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * window.innerWidth + 'px';
+            heart.style.top = window.innerHeight * 0.5 + Math.random() * 200 + 'px';
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), 1000);
+        }
+    }
+
+    function makeSound() {
+        const emoji = document.getElementById('animalEmoji');
+        emoji.style.animation = 'none';
+        setTimeout(() => emoji.style.animation = 'animalBounce 0.5s', 10);
+        spawnHearts();
+    }
+
+    function updateCollection() {
+        if (collectedAnimals.length > 0) {
+            document.getElementById('collectedSection').style.display = 'block';
+            const grid = document.getElementById('collectedGrid');
+            grid.innerHTML = '';
+            collectedAnimals.forEach(a => {
+                const item = document.createElement('div');
+                item.className = 'collected-item';
+                item.innerHTML = `<span class="emoji">${a.emoji}</span><span>${a.name}</span>`;
+                grid.appendChild(item);
+            });
+        }
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        if (mode === 'normal' && currentQ >= shuffledQuestions.length) {
+            showResults();
+        } else {
+            loadQuestion();
+        }
+    }
+
+    function showResults() {
+        showScreen('resultScreen');
+        const total = mode === 'normal' ? shuffledQuestions.length : currentQ;
+        const percentage = Math.round((score / (total * 150)) * 100);
+
+        let trophy, title, message;
+        if (collectedAnimals.length >= 10) { trophy = '👑'; title = '¡Maestro Ganadero!'; message = 'Conoces todos los animales de la granja colombiana.'; }
+        else if (collectedAnimals.length >= 7) { trophy = '🏆'; title = '¡Granjero Experto!'; message = 'Tienes un gran conocimiento de los animales del campo.'; }
+        else if (collectedAnimals.length >= 4) { trophy = '🥈'; title = '¡Buen Granjero!'; message = 'Sigues aprendiendo sobre los animales de Colombia.'; }
+        else { trophy = '🥉'; title = '¡Aprendiz de Granjero!'; message = 'Juega de nuevo para coleccionar mas animales.'; }
+
+        document.getElementById('resultTrophy').textContent = trophy;
+        document.getElementById('resultTitle').textContent = title;
+        document.getElementById('resultScore').textContent = score + ' puntos';
+        document.getElementById('resultMessage').textContent = message;
+
+        const animalsStr = collectedAnimals.map(a => a.emoji).join(' ');
+        document.getElementById('resultAnimals').textContent = animalsStr || 'No coleccionaste animales';
+
+        const final = document.getElementById('finalCollection');
+        if (collectedAnimals.length > 0) {
+            final.innerHTML = `<div class="collected-title">🏠 Tu Granja Final (${collectedAnimals.length} animales)</div><div class="collected-grid">${collectedAnimals.map(a => `<div class="collected-item"><span class="emoji">${a.emoji}</span><span>${a.name}</span></div>`).join('')}</div>`;
+        } else {
+            final.innerHTML = '';
+        }
+    }
+
+    function restartGame() {
+        showScreen('startScreen');
+    }
+</script>
+
+</body>
+</html>

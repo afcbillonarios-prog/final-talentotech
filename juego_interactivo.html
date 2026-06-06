@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroCredito Quest - Juego Interactivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #070b12; --surface: #111827; --surface2: #1f2937; --primary: #10b981; --primary-glow: rgba(16,185,129,0.3); --accent: #3b82f6; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6; --pink: #ec4899; --gold: #fbbf24; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #f3f4f6; font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+        .game-container { max-width: 800px; margin: 0 auto; padding: 20px; position: relative; }
+
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 2s infinite; }
+        @keyframes twinkle { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .start-screen { text-align: center; padding: 80px 20px; }
+        .game-logo { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .game-subtitle { color: #9ca3af; font-size: 1.2rem; margin-bottom: 40px; }
+        .start-btn { background: linear-gradient(135deg, var(--primary), #059669); color: white; border: none; padding: 18px 48px; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 40px var(--primary-glow); }
+        .start-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 50px var(--primary-glow); }
+
+        .hud { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; }
+        .hud-item { text-align: center; }
+        .hud-label { font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; }
+        .hud-value { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .hud-value.score { color: var(--gold); }
+        .hud-value.lives { color: var(--danger); }
+
+        .progress-container { width: 100%; height: 8px; background: var(--surface2); border-radius: 4px; margin-bottom: 24px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; transition: width 0.5s ease; }
+
+        .question-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 40px; margin-bottom: 24px; position: relative; overflow: hidden; }
+        .question-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent), var(--purple)); }
+        .question-category { display: inline-block; background: rgba(16,185,129,0.1); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 16px; }
+        .question-text { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 30px; }
+        .question-hint { color: #9ca3af; font-size: 0.9rem; margin-bottom: 20px; font-style: italic; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .option-btn { background: var(--surface2); border: 2px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.3s; text-align: left; position: relative; overflow: hidden; }
+        .option-btn:hover { border-color: var(--primary); transform: translateY(-2px); background: rgba(16,185,129,0.05); }
+        .option-btn.correct { border-color: var(--primary); background: rgba(16,185,129,0.15); animation: correctPulse 0.5s; }
+        .option-btn.wrong { border-color: var(--danger); background: rgba(239,68,68,0.15); animation: wrongShake 0.5s; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.5; }
+        .option-letter { display: inline-flex; width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; margin-right: 12px; }
+        .option-text { font-size: 1rem; color: #e5e7eb; }
+
+        @keyframes correctPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        @keyframes wrongShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .feedback { text-align: center; padding: 20px; border-radius: 16px; margin-top: 20px; display: none; }
+        .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+        .feedback.correct { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+        .feedback.wrong { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+        .feedback-icon { font-size: 2rem; margin-bottom: 8px; }
+        .feedback-text { font-size: 1.1rem; font-weight: 600; }
+        .feedback-explain { color: #9ca3af; font-size: 0.9rem; margin-top: 8px; }
+
+        .next-btn { background: linear-gradient(135deg, var(--accent), #2563eb); color: white; border: none; padding: 14px 36px; border-radius: 30px; font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 20px; transition: all 0.3s; display: none; }
+        .next-btn.show { display: inline-block; animation: fadeIn 0.3s ease; }
+        .next-btn:hover { transform: translateY(-2px); }
+
+        .result-screen { text-align: center; padding: 60px 20px; }
+        .result-icon { font-size: 5rem; margin-bottom: 20px; animation: bounce 1s ease; }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .result-title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
+        .result-score { font-family: 'Outfit', sans-serif; font-size: 4rem; font-weight: 900; color: var(--gold); margin: 20px 0; }
+        .result-stats { display: flex; justify-content: center; gap: 40px; margin: 30px 0; }
+        .result-stat { text-align: center; }
+        .result-stat-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .result-stat-label { font-size: 0.85rem; color: #9ca3af; }
+        .result-message { color: #9ca3af; font-size: 1.1rem; max-width: 500px; margin: 0 auto 30px; }
+        .play-again-btn { background: linear-gradient(135deg, var(--primary), #059669); color: white; border: none; padding: 16px 40px; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .play-again-btn:hover { transform: translateY(-3px); }
+
+        .badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin: 4px; }
+        .badge-bronze { background: rgba(205,127,50,0.2); color: #cd7f32; }
+        .badge-silver { background: rgba(192,192,192,0.2); color: #c0c0c0; }
+        .badge-gold { background: rgba(255,215,0,0.2); color: #ffd700; }
+        .badge-platinum { background: rgba(229,228,226,0.2); color: #e5e4e2; }
+
+        .power-ups { display: flex; justify-content: center; gap: 16px; margin-top: 20px; }
+        .power-up { background: var(--surface2); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 20px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .power-up:hover { border-color: var(--warning); transform: translateY(-2px); }
+        .power-up.used { opacity: 0.3; pointer-events: none; }
+        .power-up-icon { font-size: 1.5rem; margin-bottom: 4px; }
+        .power-up-name { font-size: 0.75rem; color: #9ca3af; }
+
+        .combo-display { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Outfit', sans-serif; font-size: 4rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 30px rgba(255,215,0,0.5); pointer-events: none; z-index: 1000; display: none; }
+        .combo-display.show { display: block; animation: comboAnim 1s ease forwards; }
+        @keyframes comboAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
+
+        .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+        .particle { position: absolute; width: 10px; height: 10px; border-radius: 50%; animation: particleAnim 1s ease forwards; }
+        @keyframes particleAnim { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); } }
+
+        @media (max-width: 600px) {
+            .game-logo { font-size: 2.2rem; }
+            .options-grid { grid-template-columns: 1fr; }
+            .result-stats { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="particles" id="particles"></div>
+<div class="combo-display" id="comboDisplay"></div>
+
+<div class="game-container">
+
+    <div class="screen active" id="startScreen">
+        <div class="start-screen">
+            <div class="game-logo">🌾 AgroCredito Quest</div>
+            <div class="game-subtitle">Juego Interactivo - Seguridad Alimentaria Colombia</div>
+            <p style="color:#9ca3af; max-width:500px; margin:0 auto 30px;">Pon a prueba tus conocimientos sobre creditos rurales, tecnologia agricola y seguridad alimentaria. Gana puntos, desbloquea logros y conviertete en un experto del campo colombiano.</p>
+            <button class="start-btn" onclick="startGame()">
+                <i class="fa-solid fa-play"></i> Jugar Ahora
+            </button>
+            <div style="margin-top:40px; color:#6b7280; font-size:0.85rem;">
+                <p>Equipo: Andres, Sebastian, Julian, Yuri</p>
+                <p>Talento Tech 2</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen" id="gameScreen">
+        <div class="hud">
+            <div class="hud-item">
+                <div class="hud-label">Puntos</div>
+                <div class="hud-value score" id="scoreDisplay">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Pregunta</div>
+                <div class="hud-value" id="questionNum">1/15</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Racha</div>
+                <div class="hud-value" id="streakDisplay">0🔥</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Vidas</div>
+                <div class="hud-value lives" id="livesDisplay">❤️❤️❤️</div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="power-ups">
+            <div class="power-up" id="pu5050" onclick="use5050()">
+                <div class="power-up-icon">🎯</div>
+                <div class="power-up-name">50/50</div>
+            </div>
+            <div class="power-up" id="puSkip" onclick="useSkip()">
+                <div class="power-up-icon">⏭️</div>
+                <div class="power-up-name">Saltar</div>
+            </div>
+            <div class="power-up" id="puHint" onclick="useHint()">
+                <div class="power-up-icon">💡</div>
+                <div class="power-up-name">Pista</div>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-category" id="questionCategory">Categoria</div>
+            <div class="question-text" id="questionText">Pregunta aqui...</div>
+            <div class="question-hint" id="questionHint" style="display:none;"></div>
+            <div class="options-grid" id="optionsGrid"></div>
+            <div class="feedback" id="feedback">
+                <div class="feedback-icon" id="feedbackIcon"></div>
+                <div class="feedback-text" id="feedbackText"></div>
+                <div class="feedback-explain" id="feedbackExplain"></div>
+            </div>
+        </div>
+
+        <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+            Siguiente <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <div class="screen" id="resultScreen">
+        <div class="result-screen">
+            <div class="result-icon" id="resultIcon">🏆</div>
+            <div class="result-title" id="resultTitle">Excelente!</div>
+            <div class="result-score" id="resultScore">0</div>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <div class="result-stat-value" id="correctCount">0</div>
+                    <div class="result-stat-label">Correctas</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-value" id="wrongCount">0</div>
+                    <div class="result-stat-label">Incorrectas</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-value" id="maxStreak">0</div>
+                    <div class="result-stat-label">Mejor Racha</div>
+                </div>
+            </div>
+            <div id="badgesContainer" style="margin:20px 0;"></div>
+            <div class="result-message" id="resultMessage"></div>
+            <button class="play-again-btn" onclick="restartGame()">
+                <i class="fa-solid fa-rotate-right"></i> Jugar de Nuevo
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const allQuestions = [
+        { cat: "Credito Rural", q: "Que porcentaje de los jovenes colombianos prefiere vivir en la ciudad?", opts: ["50%", "60%", "70%", "80%"], correct: 2, explain: "El 70% de los jovenes colombianos prefieren la ciudad, dejando el campo sin manos jovenes para cultivar." },
+        { cat: "Credito Rural", q: "Cual es el R2 del modelo de IA para predecir tasas de credito?", opts: ["75.3%", "82.1%", "89.2%", "95.8%"], correct: 2, explain: "Nuestro modelo de Regresion Lineal Multiple alcanza un R2 de 89.2%, con error promedio de solo 0.75 puntos porcentuales." },
+        { cat: "Sectores", q: "Cuantos sectores productivos cubre AgroCredito Colombia?", opts: ["5", "6", "7", "8"], correct: 2, explain: "Cubrimos 7 sectores: Agricultura, Ganaderia, Piscicultura, Porcicola, Avicultura, Energia Solar y Tecnologia Agricola." },
+        { cat: "Tecnologia", q: "Cuanto puede reducir la energia solar los costos operativos?", opts: ["20%", "30%", "40%", "50%"], correct: 2, explain: "La energia solar puede reducir costos operativos hasta un 40% en explotaciones agricolas y ganaderas." },
+        { cat: "IA", q: "Que tipo de algoritmo usa el modelo de prediccion?", opts: ["Redes Neuronales", "Arboles de Decision", "Regresion Lineal", "Random Forest"], correct: 2, explain: "Usamos Regresion Lineal Multiple por su alta interpretabilidad, permitiendo saber exactamente cuanto aporta cada variable." },
+        { cat: "Credito Rural", q: "Cuanto reduce el subsidio LEC Finagro la tasa de interes?", opts: ["2.50%", "3.80%", "4.34%", "5.10%"], correct: 2, explain: "El subsidio LEC Finagro reduce la tasa en 4.34 puntos porcentuales, siendo el factor con mayor impacto." },
+        { cat: "Sectores", q: "Que producto de la agricultura es el mas importante en Colombia?", opts: ["Arroz", "Cafe", "Maiz", "Cacao"], correct: 1, explain: "El cafe es el producto agricola mas emblematico e importante de Colombia a nivel mundial." },
+        { cat: "Tecnologia", q: "Cuanto puede aumentar el riego inteligente la productividad?", opts: ["2x", "3x", "4x", "5x"], correct: 1, explain: "El riego inteligente puede aumentar la productividad hasta 3 veces, ademas de ahorrar 60% de agua." },
+        { cat: "Seguridad Alimentaria", q: "Cuantas toneladas de alimentos se producen al ano con los creditos?", opts: ["5,000", "10,000", "15,000", "20,000"], correct: 2, explain: "Con nuestros creditos se producen mas de 15,000 toneladas de alimentos al ano para las familias colombianas." },
+        { cat: "IA", q: "Cuantas variables predictoras tiene el modelo?", opts: ["7", "9", "11", "13"], correct: 2, explain: "El modelo usa 11 variables: edad, experiencia, hectareas, ingresos, monto, plazo, garantia, subsidio, tecnologias, energia solar y riego." },
+        { cat: "Credito Rural", q: "Que porcentaje de precision tiene el modelo de IA?", opts: ["79.5%", "84.3%", "89.2%", "93.7%"], correct: 2, explain: "El modelo tiene 89.2% de precision (R2), con un error promedio de solo 0.75 puntos porcentuales." },
+        { cat: "Sectores", q: "Que animals produce la piscicultura colombiana?", opts: ["Solo salmon", "Tilapia, trucha y camaron", "Solo camarones", "Peces ornamentales"], correct: 1, explain: "La piscicultura colombiana produce tilapia, trucha, camaron y otros peces de agua dulce." },
+        { cat: "Tecnologia", q: "Que es el mapeo NDVI?", opts: ["Un tipo de riego", "Monitoreo de cultivos desde drones", "Un fertilizante", "Un sistema de cosecha"], correct: 1, explain: "El NDVI es una tecnica de monitoreo aereo que permite detectar el estado de salud de los cultivos." },
+        { cat: "Seguridad Alimentaria", q: "Cuantos departamentos de Colombia cubre la plataforma?", opts: ["20", "25", "29", "32"], correct: 2, explain: "Cubrimos 29 de los 32 departamentos de Colombia, llegando a la mayoria del territorio nacional." },
+        { cat: "IA", q: "Que reduce la garantia FAG la tasa de interes?", opts: ["1.50%", "2.36%", "3.20%", "4.00%"], correct: 1, explain: "La garantia FAG reduce la tasa en 2.36 puntos porcentuales, siendo el segundo factor mas importante." },
+        { cat: "Credito Rural", q: "Que significa E.A. en las tasas de interes?", opts: ["Efectiva Anual", "Economia Agricola", "Estimacion Actual", "Evalucion Avanzada"], correct: 0, explain: "E.A. significa Efectiva Anual, que es la tasa de interes que incluye el efecto de la composicion." },
+        { cat: "Sectores", q: "Que tipo de ganado produce la leche en Colombia?", opts: ["Ovina", "Caprina", "Bovina", "Equina"], correct: 2, explain: "La ganaderia bovina es la principal productora de leche en Colombia." },
+        { cat: "Tecnologia", q: "Que son los sensores IoT?", opts: ["Camaras de seguridad", "Dispositivos de monitoreo en tiempo real", "Sistemas de riego", "Paneles solares"], correct: 1, explain: "Los sensores IoT permiten monitorear temperatura, humedad y estado de cultivos y ganado desde el celular." },
+        { cat: "Seguridad Alimentaria", q: "Cuantos agricultores estan registrados en la plataforma?", opts: ["500", "1,000", "1,500", "2,000+"], correct: 3, explain: "Tenemos mas de 2,000 agricultores registrados en nuestra base de datos de creditos rurales." },
+        { cat: "IA", q: "Que error promedio tiene el modelo?", opts: ["0.25 pp", "0.50 pp", "0.75 pp", "1.00 pp"], correct: 2, explain: "El error promedio (MAE) es de solo 0.75 puntos porcentuales, lo que indica alta precision." }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let lives = 3;
+    let streak = 0;
+    let maxStreakVal = 0;
+    let correctAnswers = 0;
+    let wrongAnswers = 0;
+    let questions = [];
+    let powerUps = { fifty50: true, skip: true, hint: true };
+
+    function createStars() {
+        const container = document.getElementById('stars');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = star.style.height = Math.random() * 3 + 1 + 'px';
+            star.style.animationDelay = Math.random() * 2 + 's';
+            container.appendChild(star);
+        }
+    }
+    createStars();
+
+    function shuffleArray(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function startGame() {
+        questions = shuffleArray(allQuestions).slice(0, 15);
+        currentQuestion = 0;
+        score = 0;
+        lives = 3;
+        streak = 0;
+        maxStreakVal = 0;
+        correctAnswers = 0;
+        wrongAnswers = 0;
+        powerUps = { fifty50: true, skip: true, hint: true };
+        document.getElementById('pu5050').classList.remove('used');
+        document.getElementById('puSkip').classList.remove('used');
+        document.getElementById('puHint').classList.remove('used');
+        showScreen('gameScreen');
+        loadQuestion();
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function loadQuestion() {
+        const q = questions[currentQuestion];
+        document.getElementById('questionCategory').textContent = q.cat;
+        document.getElementById('questionText').textContent = q.q;
+        document.getElementById('questionHint').style.display = 'none';
+        document.getElementById('questionNum').textContent = `${currentQuestion + 1}/${questions.length}`;
+        document.getElementById('scoreDisplay').textContent = score;
+        document.getElementById('streakDisplay').textContent = streak + '🔥';
+        document.getElementById('livesDisplay').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+        document.getElementById('progressBar').style.width = ((currentQuestion) / questions.length * 100) + '%';
+        document.getElementById('feedback').className = 'feedback';
+        document.getElementById('nextBtn').className = 'next-btn';
+
+        const grid = document.getElementById('optionsGrid');
+        grid.innerHTML = '';
+        const letters = ['A', 'B', 'C', 'D'];
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span class="option-text">${opt}</span>`;
+            btn.onclick = () => selectAnswer(i);
+            grid.appendChild(btn);
+        });
+    }
+
+    function selectAnswer(index) {
+        const q = questions[currentQuestion];
+        const opts = document.querySelectorAll('.option-btn');
+        opts.forEach(o => o.classList.add('disabled'));
+
+        if (index === q.correct) {
+            opts[index].classList.add('correct');
+            correctAnswers++;
+            streak++;
+            if (streak > maxStreakVal) maxStreakVal = streak;
+            let points = 100;
+            if (streak >= 3) points += 50;
+            if (streak >= 5) points += 100;
+            score += points;
+            showFeedback(true, q.explain, points);
+            if (streak >= 3) showCombo(streak);
+            createParticles(opts[index], '#10b981');
+        } else {
+            opts[index].classList.add('wrong');
+            opts[q.correct].classList.add('correct');
+            wrongAnswers++;
+            lives--;
+            streak = 0;
+            showFeedback(false, q.explain, 0);
+            createParticles(opts[index], '#ef4444');
+        }
+
+        document.getElementById('scoreDisplay').textContent = score;
+        document.getElementById('streakDisplay').textContent = streak + '🔥';
+        document.getElementById('livesDisplay').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+        document.getElementById('nextBtn').className = 'next-btn show';
+
+        if (lives <= 0) {
+            setTimeout(() => showResults(), 1500);
+        }
+    }
+
+    function showFeedback(isCorrect, explain, points) {
+        const fb = document.getElementById('feedback');
+        fb.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+        document.getElementById('feedbackIcon').textContent = isCorrect ? '✅' : '❌';
+        document.getElementById('feedbackText').textContent = isCorrect ? `Correcto! +${points} puntos` : 'Incorrecto!';
+        document.getElementById('feedbackExplain').textContent = explain;
+    }
+
+    function showCombo(streak) {
+        const display = document.getElementById('comboDisplay');
+        display.textContent = `${streak}x COMBO!`;
+        display.className = 'combo-display show';
+        setTimeout(() => display.className = 'combo-display', 1000);
+    }
+
+    function createParticles(element, color) {
+        const rect = element.getBoundingClientRect();
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = rect.left + rect.width / 2 + 'px';
+            p.style.top = rect.top + rect.height / 2 + 'px';
+            p.style.background = color;
+            p.style.setProperty('--tx', (Math.random() - 0.5) * 200 + 'px');
+            p.style.setProperty('--ty', (Math.random() - 0.5) * 200 + 'px');
+            container.appendChild(p);
+            setTimeout(() => p.remove(), 1000);
+        }
+    }
+
+    function use5050() {
+        if (!powerUps.fifty50) return;
+        powerUps.fifty50 = false;
+        document.getElementById('pu5050').classList.add('used');
+        const q = questions[currentQuestion];
+        const opts = document.querySelectorAll('.option-btn');
+        let removed = 0;
+        const indices = [0,1,2,3].filter(i => i !== q.correct);
+        const shuffled = shuffleArray(indices);
+        for (let i = 0; i < 2; i++) {
+            opts[shuffled[i]].classList.add('disabled');
+            opts[shuffled[i]].style.opacity = '0.2';
+        }
+    }
+
+    function useSkip() {
+        if (!powerUps.skip) return;
+        powerUps.skip = false;
+        document.getElementById('puSkip').classList.add('used');
+        nextQuestion();
+    }
+
+    function useHint() {
+        if (!powerUps.hint) return;
+        powerUps.hint = false;
+        document.getElementById('puHint').classList.add('used');
+        const q = questions[currentQuestion];
+        const hint = document.getElementById('questionHint');
+        hint.textContent = '💡 Pista: ' + q.explain.substring(0, 80) + '...';
+        hint.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if (currentQuestion >= questions.length || lives <= 0) {
+            showResults();
+        } else {
+            loadQuestion();
+        }
+    }
+
+    function showResults() {
+        showScreen('resultScreen');
+        const maxScore = questions.length * 250;
+        const percentage = Math.round((score / maxScore) * 100);
+
+        document.getElementById('correctCount').textContent = correctAnswers;
+        document.getElementById('wrongCount').textContent = wrongAnswers;
+        document.getElementById('maxStreak').textContent = maxStreakVal;
+        document.getElementById('resultScore').textContent = score;
+
+        let icon, title, message;
+        if (percentage >= 90) { icon = '🏆'; title = 'Excelente!'; message = 'Eres un verdadero experto en creditos rurales y seguridad alimentaria!'; }
+        else if (percentage >= 70) { icon = '🥈'; title = 'Muy Bien!'; message = 'Tienes buenos conocimientos sobre el campo colombiano.'; }
+        else if (percentage >= 50) { icon = '🥉'; title = 'Buen Intento!'; message = 'Sigue aprendiendo sobre agricultura y creditos rurales.'; }
+        else { icon = '📚'; title = 'Sigue Practicando!'; message = 'Revisa el ebook interactivo para aprender mas sobre el proyecto.'; }
+
+        document.getElementById('resultIcon').textContent = icon;
+        document.getElementById('resultTitle').textContent = title;
+        document.getElementById('resultMessage').textContent = message;
+
+        const badges = document.getElementById('badgesContainer');
+        badges.innerHTML = '';
+        if (correctAnswers >= 5) badges.innerHTML += '<span class="badge badge-bronze">🌱 Semillero</span>';
+        if (correctAnswers >= 10) badges.innerHTML += '<span class="badge badge-silver">🌿 Agricultor</span>';
+        if (correctAnswers >= 13) badges.innerHTML += '<span class="badge badge-gold">🌾 Experto del Campo</span>';
+        if (percentage === 100) badges.innerHTML += '<span class="badge badge-platinum">👑 Maestro AgroCredito</span>';
+        if (maxStreakVal >= 5) badges.innerHTML += '<span class="badge badge-gold">🔥 Racha Imparable</span>';
+    }
+
+    function restartGame() {
+        showScreen('startScreen');
+    }
+</script>
+
+</body>
+</html>

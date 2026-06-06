@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroCrédito Colombia - Plataforma Completa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root{--bg:#070b12;--surface:#111827;--surface2:#1f2937;--primary:#10b981;--primary-rgb:16,185,129;--accent:#3b82f6;--warning:#f59e0b;--danger:#ef4444;--purple:#8b5cf6;--pink:#ec4899;--cyan:#06b6d4;--gold:#fbbf24;--text:#f3f4f6;--muted:#9ca3af;--radius:16px}
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;overflow-x:hidden}
+
+        header{position:fixed;top:0;left:0;width:100%;z-index:1000;background:rgba(7,11,18,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.05)}
+        .nav{max-width:1400px;margin:0 auto;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+        .logo{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:8px}
+        .nav-links{display:flex;gap:6px;flex-wrap:wrap}
+        .nav-links a{color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:20px;font-size:.8rem;font-weight:600;transition:all .3s;white-space:nowrap}
+        .nav-links a:hover,.nav-links a.active{background:rgba(var(--primary-rgb),.15);color:var(--primary)}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:30px;font-family:'Outfit',sans-serif;font-weight:600;font-size:.9rem;text-decoration:none;cursor:pointer;transition:all .3s;border:none}
+        .btn-primary{background:var(--primary);color:var(--bg)}
+        .btn-primary:hover{background:#34d399;transform:translateY(-2px)}
+
+        .page{display:none;min-height:100vh;padding-top:80px}
+        .page.active{display:block}
+        .section{max-width:1200px;margin:0 auto;padding:60px 20px}
+        .section-title{text-align:center;margin-bottom:50px}
+        .section-title h2{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:700;margin-bottom:10px}
+        .section-title h2 span{color:var(--primary)}
+        .section-title p{color:var(--muted);font-size:1rem;max-width:600px;margin:0 auto}
+
+        .hero{text-align:center;padding:100px 20px;background:radial-gradient(circle at 30% 30%,rgba(var(--primary-rgb),.12) 0%,transparent 60%)}
+        .hero-badge{background:rgba(var(--primary-rgb),.1);border:1px solid rgba(var(--primary-rgb),.3);color:var(--primary);padding:6px 16px;border-radius:30px;font-size:.8rem;font-weight:600;display:inline-block;margin-bottom:20px}
+        .hero h1{font-family:'Outfit',sans-serif;font-size:3.5rem;font-weight:900;line-height:1.1;margin-bottom:20px}
+        .hero h1 span{background:linear-gradient(135deg,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero p{color:var(--muted);font-size:1.1rem;max-width:650px;margin:0 auto 30px}
+        .hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+        .hero-stats{display:flex;gap:40px;justify-content:center;margin-top:50px;flex-wrap:wrap}
+        .stat-num{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;color:var(--primary)}
+        .stat-label{font-size:.8rem;color:var(--muted)}
+
+        .grid{display:grid;gap:20px}
+        .grid-2{grid-template-columns:repeat(2,1fr)}
+        .grid-3{grid-template-columns:repeat(3,1fr)}
+        .grid-4{grid-template-columns:repeat(4,1fr)}
+        .card{background:var(--surface);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:28px;transition:all .3s}
+        .card:hover{border-color:rgba(var(--primary-rgb),.3);transform:translateY(-3px)}
+        .card-icon{width:50px;height:50px;border-radius:12px;background:rgba(var(--primary-rgb),.1);color:var(--primary);display:flex;justify-content:center;align-items:center;font-size:1.3rem;margin-bottom:16px}
+        .card h3{font-family:'Outfit',sans-serif;font-size:1.1rem;margin-bottom:8px}
+        .card p{color:var(--muted);font-size:.9rem}
+        .card ul{list-style:none;margin-top:12px}
+        .card li{color:var(--muted);font-size:.85rem;padding:4px 0;padding-left:16px;position:relative}
+        .card li::before{content:'✓';color:var(--primary);position:absolute;left:0;font-weight:700}
+
+        .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+        .kpi{background:var(--surface);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:20px;text-align:center;border-top:3px solid var(--primary)}
+        .kpi-value{font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--primary)}
+        .kpi-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+        .chart-card{background:var(--surface);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:24px}
+        .chart-title{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;margin-bottom:16px;color:var(--primary)}
+
+        footer{background:#060913;border-top:1px solid rgba(255,255,255,.05);padding:40px 20px;text-align:center;margin-top:60px}
+        footer p{color:#6b7280;font-size:.85rem}
+
+        .game-area{background:var(--surface);border-radius:var(--radius);padding:30px;text-align:center}
+        .game-emoji{font-size:6rem;cursor:pointer;transition:transform .2s;user-select:none}
+        .game-emoji:hover{transform:scale(1.1)}
+        .game-emoji:active{transform:scale(.95)}
+        .game-options{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+        .game-opt{background:var(--surface2);border:2px solid rgba(255,255,255,.05);border-radius:12px;padding:16px;cursor:pointer;transition:all .3s;font-size:1rem}
+        .game-opt:hover{border-color:var(--primary);transform:translateY(-2px)}
+        .game-opt.correct{border-color:var(--primary);background:rgba(var(--primary-rgb),.15)}
+        .game-opt.wrong{border-color:var(--danger);background:rgba(239,68,68,.15)}
+        .game-opt.disabled{pointer-events:none;opacity:.4}
+        .game-hud{display:flex;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+        .hud-item{text-align:center}
+        .hud-val{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--primary)}
+        .hud-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase}
+
+        .quiz-card{background:var(--surface);border-radius:var(--radius);padding:30px;margin-bottom:20px}
+        .quiz-cat{display:inline-block;background:rgba(var(--primary-rgb),.1);color:var(--primary);padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;margin-bottom:12px}
+        .quiz-q{font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:600;margin-bottom:20px}
+
+        .feedback{padding:16px;border-radius:12px;margin:16px 0;display:none}
+        .feedback.show{display:block}
+        .feedback.correct{background:rgba(var(--primary-rgb),.1);border:1px solid rgba(var(--primary-rgb),.3)}
+        .feedback.wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)}
+
+        .ebook-chapter{background:var(--surface);border-radius:var(--radius);padding:28px;margin-bottom:20px}
+        .ebook-chapter h3{font-family:'Outfit',sans-serif;color:var(--primary);margin-bottom:12px}
+        .ebook-chapter p{color:var(--muted);margin-bottom:12px}
+        .ebook-chapter ul{list-style:none}
+        .ebook-chapter li{color:var(--muted);padding:4px 0;padding-left:16px;position:relative;font-size:.9rem}
+        .ebook-chapter li::before{content:'✓';color:var(--primary);position:absolute;left:0}
+        .voice-btns{display:flex;gap:10px;justify-content:center;margin:20px 0;flex-wrap:wrap}
+        .voice-btn{background:var(--primary);color:var(--bg);border:none;padding:10px 20px;border-radius:20px;cursor:pointer;font-weight:600;font-size:.85rem;transition:all .3s}
+        .voice-btn:hover{background:#34d399}
+        .voice-btn.stop{background:var(--danger)}
+        .voice-btn.pause{background:var(--warning)}
+
+        .collected-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+        .collected-item{background:var(--surface2);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px;font-size:.85rem}
+        .collected-item .emoji{font-size:1.3rem}
+
+        @media(max-width:768px){.hero h1{font-size:2rem}.kpi-row,.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.game-options{grid-template-columns:1fr}.nav-links{gap:4px}.nav-links a{padding:6px 10px;font-size:.7rem}}
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="nav">
+        <a href="#" class="logo"><i class="fa-solid fa-seedling"></i> AgroCrédito</a>
+        <div class="nav-links">
+            <a href="#" onclick="showPage('home')" class="active">🏠 Inicio</a>
+            <a href="#" onclick="showPage('sectors')">📊 Sectores</a>
+            <a href="#" onclick="showPage('tech')">💻 Tecnología</a>
+            <a href="#" onclick="showPage('data')">📈 Datos</a>
+            <a href="#" onclick="showPage('quiz')">🎯 Quiz</a>
+            <a href="#" onclick="showPage('animals')">🐄 Animales</a>
+            <a href="#" onclick="showPage('ebook')">📖 Ebook</a>
+        </div>
+    </div>
+</header>
+
+<!-- INICIO -->
+<div class="page active" id="page-home">
+    <div class="hero">
+        <div class="hero-badge">SEGURIDAD ALIMENTARIA + INTELIGENCIA ARTIFICIAL</h2>
+        <h1>Alimentando a Colombia con <span>Créditos Inteligentes</span></h1>
+        <p>Plataforma de créditos rurales con IA para garantizar la seguridad alimentaria. Consulta por cédula, 7 sectores productivos y tecnología rural.</p>
+        <div class="hero-btns">
+            <a href="#" onclick="showPage('quiz')" class="btn btn-primary"><i class="fa-solid fa-play"></i> Jugar Quiz</a>
+            <a href="#" onclick="showPage('animals')" class="btn btn-primary"><i class="fa-solid fa-paw"></i> Juego Animales</a>
+            <a href="#" onclick="showPage('data')" class="btn btn-primary"><i class="fa-solid fa-chart-line"></i> Ver Datos</a>
+        </div>
+        <div class="hero-stats">
+            <div><div class="stat-num">2,000+</div><div class="stat-label">Agricultores</div></div>
+            <div><div class="stat-num">7</div><div class="stat-label">Sectores</div></div>
+            <div><div class="stat-num">29</div><div class="stat-label">Departamentos</div></div>
+            <div><div class="stat-num">89.2%</div><div class="stat-label">Precisión IA</div></div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="grid grid-3">
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <h3>Consulta por Cédula</h3>
+                <p>Ingresa tu cédula y descubre si tienes crédito pre-aprobado con tasa personalizada.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
+                <h3>Modelo de IA</h3>
+                <p>Regresión lineal con R² de 89.2% que predice tasas justas para cada agricultor.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-sun"></i></div>
+                <h3>Tecnología Rural</h3>
+                <p>Energía solar, riego inteligente, drones y sensores IoT para el campo.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTORES -->
+<div class="page" id="page-sectors">
+    <div class="section">
+        <div class="section-title">
+            <h2>Sectores <span>Productivos</span></h2>
+            <p>Financiamos los 7 pilares de la seguridad alimentaria colombiana</p>
+        </div>
+        <div class="grid grid-4">
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🌱</div><h3>Agricultura</h3><p>Café, cacao, arroz, frutas, hortalizas</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🐄</div><h3>Ganadería</h3><p>Leche, carne bovina, ovina, caprina</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🐟</div><h3>Piscicultura</h3><p>Tilapia, trucha, camarón</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🐷</div><h3>Porcícola</h3><p>Cerdo, lechón, chancho gordo</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🐔</div><h3>Avicultura</h3><p>Pollo, huevo, pavo</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">☀️</div><h3>Energía Solar</h3><p>Placas fotovoltaicas, bombas</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🤖</div><h3>Tecnología</h3><p>Riego, drones, sensores IoT</p></div>
+            <div class="card" style="text-align:center"><div style="font-size:3rem;margin-bottom:12px">🐝</div><h3>Apicultura</h3><p>Miel, cera, polinización</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- TECNOLOGÍA -->
+<div class="page" id="page-tech">
+    <div class="section">
+        <div class="section-title">
+            <h2>Tecnología para el <span>Campo</span></h2>
+            <p>Innovación que reduce costos y aumenta la producción</p>
+        </div>
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-sun"></i></div>
+                <h3>☀️ Energía Solar Rural</h3>
+                <p>Reduce costos operativos hasta un 40%. Créditos preferenciales para energía renovable.</p>
+                <ul><li>Paneles para bombeo de agua</li><li>Secado solar de café</li><li>Iluminación ganadera</li></ul>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-droplet"></i></div>
+                <h3>💧 Riego Inteligente</h3>
+                <p>Aumenta productividad hasta 3x. Ahorra 60% de agua.</p>
+                <ul><li>Goteo automatizado</li><li>Aspersores de alta eficiencia</li><li>Bombas solares</li></ul>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-helicopter"></i></div>
+                <h3>🤖 Drones Agrícolas</h3>
+                <p>Monitorea cultivos desde el aire. Detecta plagas y optimiza insumos.</p>
+                <ul><li>Fumigación de precisión</li><li>Mapeo NDVI</li><li>Conteo de plantas</li></ul>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-wifi"></i></div>
+                <h3>📡 Sensores IoT</h3>
+                <p>Monitorea en tiempo real desde tu celular.</p>
+                <ul><li>Temperatura y humedad</li><li>Cámaras de vigilancia</li><li>GPS para ganado</li></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DATOS -->
+<div class="page" id="page-data">
+    <div class="section">
+        <div class="section-title">
+            <h2>Datos <span>Interactivos</span></h2>
+            <p>Explora la base de datos de créditos rurales colombianos</p>
+        </div>
+        <div class="kpi-row">
+            <div class="kpi"><div class="kpi-value">2,000</div><div class="kpi-label">Total Créditos</div></div>
+            <div class="kpi"><div class="kpi-value">1,340</div><div class="kpi-label">Aprobados</div></div>
+            <div class="kpi"><div class="kpi-value">$127.5B</div><div class="kpi-label">Monto Total COP</div></div>
+            <div class="kpi"><div class="kpi-value">16.4%</div><div class="kpi-label">Tasa Promedio</div></div>
+        </div>
+        <div class="grid grid-2">
+            <div class="chart-card"><div class="chart-title">📊 Distribución por Sector</div><canvas id="chartSector"></canvas></div>
+            <div class="chart-card"><div class="chart-title">📊 Tasa Promedio por Sector</div><canvas id="chartTasa"></canvas></div>
+            <div class="chart-card"><div class="chart-title">📊 Evolución de Créditos</div><canvas id="chartEvolucion"></canvas></div>
+            <div class="chart-card"><div class="chart-title">📊 Impacto de Tecnología</div><canvas id="chartTech"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="page-quiz">
+    <div class="section">
+        <div class="section-title">
+            <h2>🎯 Quiz <span>Interactivo</span></h2>
+            <p>Pon a prueba tus conocimientos sobre el campo colombiano</p>
+        </div>
+        <div class="game-area">
+            <div class="game-hud">
+                <div class="hud-item"><div class="hud-val" id="q-score">0</div><div class="hud-lbl">Puntos</div></div>
+                <div class="hud-item"><div class="hud-val" id="q-num">1/10</div><div class="hud-lbl">Pregunta</div></div>
+                <div class="hud-item"><div class="hud-val" id="q-streak">0🔥</div><div class="hud-lbl">Racha</div></div>
+                <div class="hud-item"><div class="hud-val" id="q-lives">❤️❤️❤️</div><div class="hud-lbl">Vidas</div></div>
+            </div>
+            <div class="quiz-card">
+                <div class="quiz-cat" id="q-cat">Categoría</div>
+                <div class="quiz-q" id="q-text">Pregunta aquí...</div>
+            </div>
+            <div class="game-options" id="q-options"></div>
+            <div class="feedback" id="q-feedback">
+                <div id="q-fb-icon"></div>
+                <div id="q-fb-text"></div>
+                <div id="q-fb-explain" style="color:var(--muted);font-size:.85rem;margin-top:8px"></div>
+            </div>
+            <button class="btn btn-primary" id="q-next" style="display:none;margin-top:16px" onclick="quizNext()">Siguiente →</button>
+            <button class="btn btn-primary" id="q-start" style="margin-top:16px" onclick="quizStart()">🎯 Iniciar Quiz</button>
+        </div>
+    </div>
+</div>
+
+<!-- ANIMALES -->
+<div class="page" id="page-animals">
+    <div class="section">
+        <div class="section-title">
+            <h2>🐄 Granja <span>Colombiana</span></h2>
+            <p>Adivina el animal y colecciona tu granja virtual</p>
+        </div>
+        <div class="game-area">
+            <div class="game-hud">
+                <div class="hud-item"><div class="hud-val" id="a-score">0</div><div class="hud-lbl">Puntos</div></div>
+                <div class="hud-item"><div class="hud-val" id="a-num">1/10</div><div class="hud-lbl">Pregunta</div></div>
+                <div class="hud-item"><div class="hud-val" id="a-streak">0🔥</div><div class="hud-lbl">Racha</div></div>
+                <div class="hud-item"><div class="hud-val" id="a-collected">0🐾</div><div class="hud-lbl">Animales</div></div>
+            </div>
+            <div style="background:var(--surface2);border-radius:16px;padding:30px;margin-bottom:20px">
+                <div class="game-emoji" id="a-emoji" onclick="animalSound()">🐄</div>
+            </div>
+            <div class="quiz-card">
+                <div class="quiz-q" id="a-text">¿Qué animal es este?</div>
+            </div>
+            <div class="game-options" id="a-options"></div>
+            <div class="feedback" id="a-feedback">
+                <div id="a-fb-icon"></div>
+                <div id="a-fb-text"></div>
+                <div id="a-fb-fact" style="color:var(--muted);font-size:.85rem;margin-top:8px"></div>
+            </div>
+            <button class="btn btn-primary" id="a-next" style="display:none;margin-top:16px" onclick="animalNext()">Siguiente →</button>
+            <button class="btn btn-primary" id="a-start" style="margin-top:16px" onclick="animalStart()">🐄 Iniciar Juego</button>
+            <div class="collected-grid" id="a-collection"></div>
+        </div>
+    </div>
+</div>
+
+<!-- EBOOK -->
+<div class="page" id="page-ebook">
+    <div class="section">
+        <div class="section-title">
+            <h2>📖 Ebook <span>Interactivo</span></h2>
+            <p>Guía paso a paso del proyecto con voz</p>
+        </div>
+        <div class="voice-btns">
+            <button class="voice-btn" onclick="ebookPlay()"><i class="fa-solid fa-play"></i> Leer</button>
+            <button class="voice-btn pause" onclick="ebookPause()"><i class="fa-solid fa-pause"></i> Pausar</button>
+            <button class="voice-btn stop" onclick="ebookStop()"><i class="fa-solid fa-stop"></i> Detener</button>
+            <select id="ebook-speed" style="padding:8px;border-radius:8px;background:var(--surface2);color:var(--text);border:1px solid rgba(255,255,255,.1)">
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+            </select>
+        </div>
+        <div id="ebook-chapters">
+            <div class="ebook-chapter" data-text="Capítulo 1: El Problema. Colombia tiene una crisis: los jóvenes abandonan el campo por falta de oportunidades. Los créditos agrícolas son caros y la producción de alimentos no alcanza. El 70% de los jóvenes prefiere vivir en la ciudad.">
+                <h3>Capítulo 1: El Problema</h3>
+                <p>Colombia tiene una crisis: los jóvenes abandonan el campo por falta de oportunidades. Los créditos agrícolas son caros e inaccesibles.</p>
+                <ul><li>Tasas prohibitivas para pequeños agricultores</li><li>Falta de tecnología moderna</li><li>Jóvenes sin incentivos</li><li>Importación excesiva de alimentos</li></ul>
+            </div>
+            <div class="ebook-chapter" data-text="Capítulo 2: Nuestra Solución. AgroCrédito Colombia usa inteligencia artificial para predecir tasas justas. Consulta por cédula con 89.2% de precisión. 7 sectores productivos cubiertos.">
+                <h3>Capítulo 2: Nuestra Solución</h3>
+                <p>Usamos IA para predecir tasas justas, conectamos agricultores con subsidios y promovemos tecnología rural.</p>
+                <ul><li>Consulta por cédula en segundos</li><li>Modelo con 89.2% de precisión</li><li>7 sectores productivos</li></ul>
+            </div>
+            <div class="ebook-chapter" data-text="Capítulo 3: Sectores Productivos. Financiamos Agricultura, Ganadería, Piscicultura, Porcícola, Avicultura, Energía Solar y Tecnología Agrícola.">
+                <h3>Capítulo 3: Sectores Productivos</h3>
+                <p>7 pilares de la seguridad alimentaria: Agricultura, Ganadería, Piscicultura, Porcícola, Avicultura, Energía Solar y Tecnología.</p>
+            </div>
+            <div class="ebook-chapter" data-text="Capítulo 4: Tecnología Rural. Energía solar reduce costos 40%. Riego inteligente aumenta productividad 3 veces. Drones y sensores IoT monitorean cultivos.">
+                <h3>Capítulo 4: Tecnología Rural</h3>
+                <ul><li>Energía Solar: -40% costos</li><li>Riego Inteligente: +3x productividad</li><li>Drones: monitoreo aéreo</li><li>Sensores IoT: monitoreo en tiempo real</li></ul>
+            </div>
+            <div class="ebook-chapter" data-text="Capítulo 5: Modelo de Inteligencia Artificial. Regresión lineal múltiple con R2 de 89.2%. El subsidio Finagro reduce 4.34% la tasa. La garantía FAG reduce 2.36%.">
+                <h3>Capítulo 5: Modelo de IA</h3>
+                <p>Regresión lineal con R² de 89.2%. Error promedio de solo 0.75 puntos porcentuales.</p>
+                <ul><li>Subsidio Finagro: -4.34%</li><li>Garantía FAG: -2.36%</li><li>Energía Solar: -0.69%</li></ul>
+            </div>
+            <div class="ebook-chapter" data-text="Capítulo 6: Seguridad Alimentaria. 2,000 agricultores registrados. 15,000 toneladas de alimentos por año. 29 departamentos cubiertos.">
+                <h3>Capítulo 6: Seguridad Alimentaria</h3>
+                <ul><li>2,000+ agricultores registrados</li><li>15,000+ toneladas/año</li><li>29 departamentos</li></ul>
+            </div>
+            <div class="ebook-chapter" data-text="Capítulo 7: Conclusión. Volvamos al campo. Cultivemos nuestro futuro. Alimentemos a Colombia. La tecnología y el crédito justo pueden transformar el campo colombiano.">
+                <h3>Capítulo 7: Conclusión</h3>
+                <p><strong>"Volvamos al campo. Cultivemos nuestro futuro. Alimentemos a Colombia."</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>AgroCrédito Colombia © 2026 | Seguridad Alimentaria y Créditos Rurales</p>
+    <p style="margin-top:8px">Equipo: Andrés, Sebastián, Julián, Yuri - Talento Tech 2</p>
+</footer>
+
+<script>
+// NAV
+function showPage(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    window.scrollTo(0,0);
+    if(id==='data')initCharts();
+}
+
+// CHARTS
+const colors={primary:'#10b981',accent:'#3b82f6',warning:'#f59e0b',danger:'#ef4444',purple:'#8b5cf6',pink:'#ec4899',cyan:'#06b6d4'};
+let chartsInit=false;
+function initCharts(){
+    if(chartsInit)return;chartsInit=true;
+    new Chart(document.getElementById('chartSector'),{type:'doughnut',data:{labels:['Agricultura','Ganadería','Piscicultura','Porcícola','Avicultura','Solar','Tecnología'],datasets:[{data:[600,400,300,200,160,140,200],backgroundColor:[colors.primary,colors.accent,colors.cyan,colors.warning,colors.pink,colors.purple,colors.danger],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#9ca3af'}}}}});
+    new Chart(document.getElementById('chartTasa'),{type:'bar',data:{labels:['Agri.','Ganad.','Pisci.','Porcí.','Avic.','Solar','Tecno.'],datasets:[{label:'Tasa %',data:[16.2,15.8,17.1,16.5,15.9,14.8,14.2],backgroundColor:[colors.primary,colors.accent,colors.cyan,colors.warning,colors.pink,colors.purple,colors.danger],borderRadius:8}]},options:{responsive:true,scales:{y:{ticks:{color:'#9ca3af'},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#9ca3af'},grid:{display:false}}},plugins:{legend:{display:false}}}});
+    new Chart(document.getElementById('chartEvolucion'),{type:'line',data:{labels:['2019','2020','2021','2022','2023','2024','2025','2026'],datasets:[{label:'Créditos',data:[450,520,610,720,850,980,1150,1340],borderColor:colors.primary,backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4},{label:'Monto (Mds)',data:[35,42,55,68,85,100,118,127],borderColor:colors.accent,backgroundColor:'rgba(59,130,246,.1)',fill:true,tension:.4}]},options:{responsive:true,scales:{y:{ticks:{color:'#9ca3af'},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#9ca3af'},grid:{display:false}}},plugins:{legend:{labels:{color:'#9ca3af'}}}}});
+    new Chart(document.getElementById('chartTech'),{type:'bar',data:{labels:['0 Tech','1 Tech','2 Tech','3 Tech','4 Tech','5 Tech'],datasets:[{label:'Tasa',data:[19.2,17.8,16.5,15.3,14.1,13.2],backgroundColor:colors.primary,borderRadius:8}]},options:{responsive:true,scales:{y:{ticks:{color:'#9ca3af'},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#9ca3af'},grid:{display:false}}},plugins:{legend:{display:false}}}});
+}
+
+// QUIZ
+const quizQs=[
+{cat:'Credito Rural',q:'Que porcentaje de jovenes prefiere la ciudad?',opts:['50%','60%','70%','80%'],correct:2,exp:'El 70% de los jovenes prefiere la ciudad.'},
+{cat:'IA',q:'Cual es la precision del modelo?',opts:['75%','82%','89.2%','95%'],correct:2,exp:'El modelo tiene R2 de 89.2%.'},
+{cat:'Sectores',q:'Cuantos sectores cubrimos?',opts:['5','6','7','8'],correct:2,exp:'7 sectores: Agricultura, Ganaderia, Piscicultura, Porcicola, Avicultura, Solar, Tecnologia.'},
+{cat:'Tecnologia',q:'Cuanto reduce la energia solar costos?',opts:['20%','30%','40%','50%'],correct:2,exp:'La energia solar reduce costos hasta 40%.'},
+{cat:'IA',q:'Que algoritmo usamos?',opts:['Redes Neuronales','Arboles','Regresion Lineal','Random Forest'],correct:2,exp:'Usamos Regresion Lineal Multiple por interpretabilidad.'},
+{cat:'Credito',q:'Cuanto reduce el subsidio Finagro?',opts:['2.5%','3.8%','4.34%','5.1%'],correct:2,exp:'El subsidio reduce 4.34 puntos porcentuales.'},
+{cat:'Sectores',q:'Cual es el producto agricola mas importante?',opts:['Arroz','Cafe','Maiz','Cacao'],correct:1,exp:'El cafe es el mas emblematico de Colombia.'},
+{cat:'Tecnologia',q:'Cuanto aumenta el riego la productividad?',opts:['2x','3x','4x','5x'],correct:1,exp:'El riego inteligente aumenta productividad hasta 3x.'},
+{cat:'Seguridad',q:'Cuantas toneladas se producen al ano?',opts:['5,000','10,000','15,000','20,000'],correct:2,exp:'Mas de 15,000 toneladas al ano.'},
+{cat:'IA',q:'Cuantas variables usa el modelo?',opts:['7','9','11','13'],correct:2,exp:'11 variables predictoras.'}
+];
+let qIdx=0,qScore=0,qLives=3,qStreak=0;
+function shuffleArr(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function quizStart(){qIdx=0;qScore=0;qLives=3;qStreak=0;quizQs=shuffleArr(quizQs).slice(0,10);document.getElementById('q-start').style.display='none';quizLoad()}
+function quizLoad(){
+    if(qIdx>=quizQs.length||qLives<=0){quizEnd();return}
+    const q=quizQs[qIdx];
+    document.getElementById('q-cat').textContent=q.cat;
+    document.getElementById('q-text').textContent=q.q;
+    document.getElementById('q-score').textContent=qScore;
+    document.getElementById('q-streak').textContent=qStreak+'🔥';
+    document.getElementById('q-lives').textContent='❤️'.repeat(qLives);
+    document.getElementById('q-num').textContent=(qIdx+1)+'/'+quizQs.length;
+    document.getElementById('q-feedback').className='feedback';
+    document.getElementById('q-next').style.display='none';
+    const g=document.getElementById('q-options');g.innerHTML='';
+    q.opts.forEach((o,i)=>{const b=document.createElement('div');b.className='game-opt';b.textContent=o;b.onclick=()=>quizAnswer(i);g.appendChild(b)});
+}
+function quizAnswer(i){
+    const q=quizQs[qIdx];document.querySelectorAll('#q-options .game-opt').forEach(o=>o.classList.add('disabled'));
+    if(i===q.correct){document.querySelectorAll('#q-options .game-opt')[i].classList.add('correct');qScore+=100+(qStreak*20);qStreak++;document.getElementById('q-feedback').className='feedback show correct'}
+    else{document.querySelectorAll('#q-options .game-opt')[i].classList.add('wrong');document.querySelectorAll('#q-options .game-opt')[q.correct].classList.add('correct');qLives--;qStreak=0;document.getElementById('q-feedback').className='feedback show wrong'}
+    document.getElementById('q-fb-icon').textContent=i===q.correct?'✅':'❌';
+    document.getElementById('q-fb-text').textContent=i===q.correct?'Correcto! +100':'Incorrecto!';
+    document.getElementById('q-fb-explain').textContent=q.exp;
+    document.getElementById('q-score').textContent=qScore;document.getElementById('q-streak').textContent=qStreak+'🔥';document.getElementById('q-lives').textContent='❤️'.repeat(qLives);
+    document.getElementById('q-next').style.display='inline-block';
+}
+function quizNext(){qIdx++;quizLoad()}
+function quizEnd(){document.getElementById('q-text').textContent=qScore>=700?'🏆 Excelente! Eres experto!':qScore>=400?'🥈 Muy bien! Sigue aprendiendo!':'🥉 Buen intento! Practica mas!';document.getElementById('q-options').innerHTML='';document.getElementById('q-next').style.display='none';document.getElementById('q-start').style.display='inline-block';document.getElementById('q-start').textContent='🔄 Jugar de Nuevo'}
+
+// ANIMALES
+const animalDB=[
+{emoji:'🐄',name:'Vaca',fact:'Colombia tiene mas de 28 millones de bovinos.'},
+{emoji:'🐔',name:'Gallina',fact:'Produce mas de 2 mil millones de huevos al ano.'},
+{emoji:'🐷',name:'Cerdo',fact:'La produccion porcina genera miles de empleos.'},
+{emoji:'🐟',name:'Pez',fact:'Tilapia y trucha en 25 departamentos.'},
+{emoji:'🐴',name:'Caballo',fact:'Esencial para transporte y trabajo agricola.'},
+{emoji:'🐐',name:'Cabra',fact:'Leche y carne en zonas aridas.'},
+{emoji:'🐑',name:'Oveja',fact:'Lana, carne y leche.'},
+{emoji:'🦆',name:'Pato',fact:'Huevos y carne en produccion integrada.'},
+{emoji:'🦃',name:'Pavo',fact:'Carne para festividades.'},
+{emoji:'🐝',name:'Abeja',fact:'Miel y polinizacion vital.'}
+];
+let aIdx=0,aScore=0,aStreak=0,aCollected=[];
+function animalStart(){aIdx=0;aScore=0;aStreak=0;aCollected=[];document.getElementById('a-start').style.display='none';animalLoad()}
+function animalLoad(){
+    if(aIdx>=10){animalEnd();return}
+    const a=animalDB[aIdx%animalDB.length];
+    document.getElementById('a-emoji').textContent=a.emoji;
+    document.getElementById('a-text').textContent='¿Que animal es este?';
+    document.getElementById('a-score').textContent=aScore;
+    document.getElementById('a-streak').textContent=aStreak+'🔥';
+    document.getElementById('a-num').textContent=(aIdx+1)+'/10';
+    document.getElementById('a-collected').textContent=aCollected.length+'🐾';
+    document.getElementById('a-feedback').className='feedback';
+    document.getElementById('a-next').style.display='none';
+    const opts=shuffleArr(animalDB.map(x=>x.name)).slice(0,4);
+    if(!opts.includes(a.name)){opts[0]=a.name}
+    const g=document.getElementById('a-options');g.innerHTML='';
+    shuffleArr(opts).forEach(o=>{const b=document.createElement('div');b.className='game-opt';b.textContent=o;b.onclick=()=>animalAnswer(o,a);g.appendChild(b)});
+}
+function animalAnswer(ans,a){
+    document.querySelectorAll('#a-options .game-opt').forEach(o=>o.classList.add('disabled'));
+    if(ans===a.name){
+        document.querySelectorAll('#a-options .game-opt').forEach(o=>{if(o.textContent===ans)o.classList.add('correct')});
+        aScore+=100+(aStreak*20);aStreak++;
+        if(!aCollected.find(x=>x.name===a.name))aCollected.push(a);
+        document.getElementById('a-feedback').className='feedback show correct';
+    }else{
+        document.querySelectorAll('#a-options .game-opt').forEach(o=>{if(o.textContent===ans)o.classList.add('wrong');if(o.textContent===a.name)o.classList.add('correct')});
+        aStreak=0;
+        document.getElementById('a-feedback').className='feedback show wrong';
+    }
+    document.getElementById('a-fb-icon').textContent=ans===a.name?'🎉':'😢';
+    document.getElementById('a-fb-text').textContent=ans===a.name?'Correcto! +100':'Incorrecto!';
+    document.getElementById('a-fb-fact').textContent=a.fact;
+    document.getElementById('a-score').textContent=aScore;
+    document.getElementById('a-streak').textContent=aStreak+'🔥';
+    document.getElementById('a-collected').textContent=aCollected.length+'🐾';
+    document.getElementById('a-next').style.display='inline-block';
+    const c=document.getElementById('a-collection');c.innerHTML='';aCollected.forEach(x=>{const d=document.createElement('div');d.className='collected-item';d.innerHTML=`<span class="emoji">${x.emoji}</span>${x.name}`;c.appendChild(d)});
+}
+function animalNext(){aIdx++;animalLoad()}
+function animalEnd(){document.getElementById('a-text').textContent=aCollected.length>=7?'🏆 Granjero Experto!':aCollected.length>=4?'🥈 Buen Granjero!':'🥉 Aprendiz!';document.getElementById('a-options').innerHTML='';document.getElementById('a-next').style.display='none';document.getElementById('a-start').style.display='inline-block';document.getElementById('a-start').textContent='🔄 Jugar de Nuevo'}
+function animalSound(){const e=document.getElementById('a-emoji');e.style.animation='none';setTimeout(()=>e.style.animation='animalBounce .5s',10)}
+
+// EBOOK VOZ
+let synth=window.speechSynthesis,utterance=null;
+function ebookPlay(){ebookStop();const ch=document.querySelectorAll('.ebook-chapter');let text='';ch.forEach(c=>text+=c.dataset.text+'. ');utterance=new SpeechSynthesisUtterance(text);utterance.lang='es-CO';utterance.rate=parseFloat(document.getElementById('ebook-speed').value);synth.speak(utterance)}
+function ebookPause(){if(synth.speaking)synth.pause();else if(synth.paused)synth.resume()}
+function ebookStop(){synth.cancel()}
+
+// ANIM CSS
+const style=document.createElement('style');style.textContent='@keyframes animalBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}';document.head.appendChild(style);
+</script>
+
+</body>
+</html>
